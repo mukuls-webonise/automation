@@ -1,10 +1,8 @@
 package com.selenium.test.testng.tests;
 
-import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.ElementsCollection;
-import com.codeborne.selenide.SelenideElement;
-import com.codeborne.selenide.WebDriverRunner;
+import com.codeborne.selenide.*;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -34,7 +32,12 @@ public class SimpleTest {
     public void testTripAdvisor() {
 
         System.setProperty("webdriver.chrome.driver", "/Users/mukul_sharma/Desktop/chromedriver");
-        WebDriverRunner.setWebDriver(new ChromeDriver());
+        Configuration.timeout = 10000;
+        Configuration.openBrowserTimeoutMs = 10000;
+        Configuration.collectionsTimeout = 10000;
+
+        WebDriver driver = new ChromeDriver();
+        WebDriverRunner.setWebDriver(driver);
 
 //        Given we are on trip advisor
         open(address);
@@ -79,9 +82,9 @@ public class SimpleTest {
         submit.click();
 
 //        then if popup is shown close it
-        SelenideElement element = $(By.className("ui_close_x"));
-        if (element.isDisplayed()) {
-            element.click();
+        SelenideElement closeFirstPopup = $(By.className("ui_close_x"));
+        if (closeFirstPopup.isDisplayed()) {
+            closeFirstPopup.click();
         }
 
 //        We should be directed to results page
@@ -95,21 +98,31 @@ public class SimpleTest {
 //        when deal button is clicked
         deal.click();
 
-////        then redirect message should be shown
-//        SelenideElement message = $(By.className("messageText"));
-//        message.shouldBe(Condition.visible);
-//
-////        ad price should be visible
-//        SelenideElement price = $(By.className("totalPrice"));
-//        price.shouldBe(Condition.visible);
-//
-//        File file = Paths.get("file.txt").toFile();
-//        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
-//            writer.write(message.getValue());
-//            writer.write(price.getValue());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        String window = driver.getWindowHandles().iterator().next();
+        driver.switchTo().window(window);
+
+        SelenideElement closeSecondPopup = $(By.className("ui_close_x"));
+        if (closeSecondPopup.isDisplayed()) {
+            closeSecondPopup.click();
+        }
+
+        SelenideElement more = $(By.xpath("//span[@class = 'sort_item sort_item_more']/label"));
+        more.shouldBe(Condition.visible);
+        more.click();
+
+        ElementsCollection subItems = $$(By.className("sub_sort_item"));
+        subItems.get(random.nextInt(4)).click();
+
+//        then redirect message should be shown
+        updateSearchTitle.shouldBe(Condition.visible);
+
+//        ad price should be visible
+        SelenideElement price = $(By.className("price"));
+        price.shouldBe(Condition.visible);
+
+        System.out.println("flight details : " + updateSearchTitle.getText());
+        System.out.println("Price: " + price.getText());
+
     }
 
     public void selectDate(String date) {
